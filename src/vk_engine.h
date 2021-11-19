@@ -7,13 +7,47 @@
 
 #include <vk_types.h>
 
+#include <functional>
+#include <deque>
+
+struct DeletionQueue {
+    std::deque<std::function<void()>> deletors;
+
+    void push_function(std::function<void()>&& function) {
+        deletors.push_back(function);
+    }
+
+    void flush() {
+        for (auto it = deletors.rbegin(); it != deletors.rend(); it++) {
+            (*it)(); //call the function
+        }
+        deletors.clear();
+    }
+};
+
+class PipelineBuilder {
+public:
+	std::vector<VkPipelineShaderStageCreateInfo> _shaderStages;
+	VkPipelineVertexInputStateCreateInfo _vertexInputInfo;
+	VkPipelineInputAssemblyStateCreateInfo _inputAssembly;
+	VkViewport _viewport;
+	VkRect2D _scissor;
+	VkPipelineRasterizationStateCreateInfo _rasterizer;
+	VkPipelineColorBlendAttachmentState _colorBlendAttachment;
+	VkPipelineMultisampleStateCreateInfo _multisampling;
+	VkPipelineLayout _pipelineLayout;
+
+	VkPipeline build_pipeline(VkDevice device, VkRenderPass pass);
+};
+
+
 class VulkanEngine {
 public:
 
 	bool _isInitialized{ false };
 	int _frameNumber {0};
 
-	VkExtent2D _windowExtent{ 1700 , 900 };
+	VkExtent2D _windowExtent{ 800 , 600 };
 
 	struct SDL_Window* _window{ nullptr };
 
@@ -48,6 +82,17 @@ public:
 	VkSemaphore _presentSemaphore, _renderSemaphore;
 	VkFence _renderFence;
 
+	VkShaderModule triangleVertShader;
+	VkShaderModule triangleFragShader;
+
+	VkPipelineLayout _trianglePipelineLayout;
+	VkPipeline _trianglePipeline;
+	VkPipeline _redTrianglePipeline;
+
+	int _selectedShader{ 0 };
+
+	DeletionQueue _mainDeletionQueue;
+
 	//initializes everything in the engine
 	void init();
 
@@ -73,4 +118,8 @@ private:
 	void init_framebuffers();
 
 	void init_sync_structures();
+
+	void init_pipelines();
+
+	bool load_shader_module(const char* filePath, VkShaderModule* outShaderModule);
 };
