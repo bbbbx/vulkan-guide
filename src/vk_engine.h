@@ -4,11 +4,31 @@
 #pragma once
 
 #include <vector>
-
-#include <vk_types.h>
-
 #include <functional>
 #include <deque>
+
+#include <glm/glm.hpp>
+
+#include "vk_mesh.h"
+
+#include <string>
+#include <unordered_map>
+
+struct Material {
+	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+};
+
+struct RenderObject {
+	Mesh* mesh;
+	Material* material;
+	glm::mat4 transformMatrix;
+};
+
+struct MeshPushConstants {
+    glm::vec4 data;
+    glm::mat4 render_matrix;
+};
 
 struct DeletionQueue {
     std::deque<std::function<void()>> deletors;
@@ -34,6 +54,7 @@ public:
 	VkRect2D _scissor;
 	VkPipelineRasterizationStateCreateInfo _rasterizer;
 	VkPipelineColorBlendAttachmentState _colorBlendAttachment;
+	VkPipelineDepthStencilStateCreateInfo _depthStencil;
 	VkPipelineMultisampleStateCreateInfo _multisampling;
 	VkPipelineLayout _pipelineLayout;
 
@@ -47,7 +68,7 @@ public:
 	bool _isInitialized{ false };
 	int _frameNumber {0};
 
-	VkExtent2D _windowExtent{ 800 , 600 };
+	VkExtent2D _windowExtent{ 1700 , 900 };
 
 	struct SDL_Window* _window{ nullptr };
 
@@ -82,16 +103,26 @@ public:
 	VkSemaphore _presentSemaphore, _renderSemaphore;
 	VkFence _renderFence;
 
-	VkShaderModule triangleVertShader;
-	VkShaderModule triangleFragShader;
-
-	VkPipelineLayout _trianglePipelineLayout;
-	VkPipeline _trianglePipeline;
-	VkPipeline _redTrianglePipeline;
-
 	int _selectedShader{ 0 };
 
 	DeletionQueue _mainDeletionQueue;
+
+	VmaAllocator _allocator;
+
+	AllocatedImage _depthImage;
+	VkImageView _depthImageView;
+	VkFormat _depthFormat;
+
+	std::vector<RenderObject> _renderables;
+	std::unordered_map<std::string, Mesh> _meshes;
+	std::unordered_map<std::string, Material> _materials;
+
+	Material* create_material(VkPipeline pipeline, VkPipelineLayout pipelineLayout, const std::string& name);
+    Material* get_material(const std::string& name);
+
+    Mesh* get_mesh(const std::string& name); 
+
+    void draw_objects(VkCommandBuffer cmd, RenderObject* first, int count);
 
 	//initializes everything in the engine
 	void init();
@@ -122,4 +153,10 @@ private:
 	void init_pipelines();
 
 	bool load_shader_module(const char* filePath, VkShaderModule* outShaderModule);
+
+	void init_scene();
+
+
+	void load_meshes();
+	void upload_mesh(Mesh& mesh);
 };
