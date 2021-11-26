@@ -32,5 +32,11 @@ namespace vkinit {
 	VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp);
 
 	VkRenderPassBeginInfo renderpass_begin_info(VkRenderPass renderPass, VkExtent2D windowExtent, VkFramebuffer framebuffer);
+
+	VkFenceCreateInfo fence_create_info(VkFenceCreateFlags flags);
+	VkSemaphoreCreateInfo semaphore_create_info();
+
+	VkDescriptorSetLayoutBinding descriptor_layout_binding(VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t binding);
+	VkWriteDescriptorSet write_descriptor_buffer(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorBufferInfo* bufferInfo, uint32_t binding);
 }
 

@@ -14,6 +14,40 @@
 #include <string>
 #include <unordered_map>
 
+constexpr unsigned int FRAME_OVERLAP = 2;
+
+struct GPUCameraData {
+    glm::mat4 view;
+    glm::mat4 projection;
+    glm::mat4 viewproj;
+};
+
+struct GPUSceneData {
+    glm::vec4 fogColor;  // w is exponent
+    glm::vec4 fogDistances; // x for min, y for max, zw unused
+    glm::vec4 ambientColor;
+    glm::vec4 sunlightDirection; // w for sun power
+    glm::vec4 sunlightColor;
+};
+
+struct GPUObjectData {
+	glm::mat4 modelMatrix;
+};
+
+struct FrameData {
+	VkSemaphore _renderSemaphore, _presentSemaphore;
+	VkFence _renderFence;
+
+	VkCommandPool _commandPool;
+	VkCommandBuffer _mainCommandBuffer;
+
+	AllocatedBuffer cameraBuffer;
+	VkDescriptorSet globalDescriptor;
+
+	AllocatedBuffer objectBuffer;
+	VkDescriptorSet objectDescriptor;
+};
+
 struct Material {
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
@@ -79,6 +113,8 @@ public:
 	VkDevice _device; // Vulkan device for commands
 	VkSurfaceKHR _surface; // Vulkan window surface
 
+	VkPhysicalDeviceProperties _gpuProperties;
+
 	// --- other code ---
 	VkSwapchainKHR _swapchain; // from other articles
 
@@ -94,14 +130,14 @@ public:
 	VkQueue _graphicsQueue;
 	uint32_t _graphicsQueueFamily;
 
-	VkCommandPool _commandPool;
-	VkCommandBuffer _mainCommandBuffer;
-
 	VkRenderPass _renderPass;
 	std::vector<VkFramebuffer> _framebuffers;
 
-	VkSemaphore _presentSemaphore, _renderSemaphore;
-	VkFence _renderFence;
+	FrameData _frames[FRAME_OVERLAP];
+
+	VkDescriptorSetLayout _globalSetLayout;
+	VkDescriptorSetLayout _objectSetLayout;
+    VkDescriptorPool _descriptorPool;
 
 	int _selectedShader{ 0 };
 
@@ -117,12 +153,20 @@ public:
 	std::unordered_map<std::string, Mesh> _meshes;
 	std::unordered_map<std::string, Material> _materials;
 
+	GPUSceneData _sceneParameters;
+    AllocatedBuffer _sceneParameterBuffer;
+
+	FrameData& get_current_frame();
+
 	Material* create_material(VkPipeline pipeline, VkPipelineLayout pipelineLayout, const std::string& name);
     Material* get_material(const std::string& name);
 
     Mesh* get_mesh(const std::string& name); 
 
     void draw_objects(VkCommandBuffer cmd, RenderObject* first, int count);
+
+	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
+	size_t pad_uniform_buffer_size(size_t originalSize);
 
 	//initializes everything in the engine
 	void init();
@@ -156,6 +200,7 @@ private:
 
 	void init_scene();
 
+    void init_descriptors();
 
 	void load_meshes();
 	void upload_mesh(Mesh& mesh);

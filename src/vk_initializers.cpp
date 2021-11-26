@@ -185,3 +185,49 @@ VkRenderPassBeginInfo vkinit::renderpass_begin_info(VkRenderPass renderPass, VkE
 	info.renderArea.extent = windowExtent;
 	return info;
 }
+
+VkFenceCreateInfo vkinit::fence_create_info(VkFenceCreateFlags flags) {
+	VkFenceCreateInfo fenceCreateInfo = {};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.pNext = nullptr;
+
+	//we want to create the fence with the Create Signaled flag, so we can wait on it before using it on a GPU command (for the first frame)
+	fenceCreateInfo.flags = flags;
+
+	return fenceCreateInfo;
+}
+
+VkSemaphoreCreateInfo vkinit::semaphore_create_info() {
+	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	semaphoreCreateInfo.pNext = nullptr;
+	//for the semaphores we don't need any flags
+	semaphoreCreateInfo.flags = 0;
+
+	return semaphoreCreateInfo;
+}
+
+VkDescriptorSetLayoutBinding vkinit::descriptor_layout_binding(VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t binding) {
+    VkDescriptorSetLayoutBinding setbind = {};
+    setbind.binding = binding;
+    setbind.descriptorCount = 1;
+    setbind.descriptorType = type;
+    setbind.pImmutableSamplers = nullptr;
+    setbind.stageFlags = stageFlags;
+
+    return setbind;
+}
+
+VkWriteDescriptorSet vkinit::write_descriptor_buffer(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorBufferInfo* bufferInfo, uint32_t binding) {
+    VkWriteDescriptorSet write = {};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.pNext = nullptr;
+
+    write.dstBinding = binding;
+    write.dstSet = dstSet;
+    write.descriptorCount = 1;
+    write.descriptorType = type;
+    write.pBufferInfo = bufferInfo;
+
+    return write;
+}
