@@ -51,6 +51,7 @@ struct FrameData {
 struct Material {
 	VkPipeline pipeline;
 	VkPipelineLayout pipelineLayout;
+	VkDescriptorSet textureSet{VK_NULL_HANDLE}; //texture defaulted to null
 };
 
 struct RenderObject {
@@ -77,6 +78,16 @@ struct DeletionQueue {
         }
         deletors.clear();
     }
+};
+
+struct UploadContext {
+    VkFence _uploadFence;
+    VkCommandPool _commandPool;
+};
+
+struct Texture {
+    AllocatedImage image;
+    VkImageView imageView;
 };
 
 class PipelineBuilder {
@@ -137,6 +148,7 @@ public:
 
 	VkDescriptorSetLayout _globalSetLayout;
 	VkDescriptorSetLayout _objectSetLayout;
+	VkDescriptorSetLayout _singleTextureSetLayout;
     VkDescriptorPool _descriptorPool;
 
 	int _selectedShader{ 0 };
@@ -152,9 +164,14 @@ public:
 	std::vector<RenderObject> _renderables;
 	std::unordered_map<std::string, Mesh> _meshes;
 	std::unordered_map<std::string, Material> _materials;
+	std::unordered_map<std::string, Texture> _loadedTextures;
 
 	GPUSceneData _sceneParameters;
     AllocatedBuffer _sceneParameterBuffer;
+
+
+	UploadContext _uploadContext;
+	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
 	FrameData& get_current_frame();
 
@@ -204,4 +221,6 @@ private:
 
 	void load_meshes();
 	void upload_mesh(Mesh& mesh);
+
+	void load_images();
 };

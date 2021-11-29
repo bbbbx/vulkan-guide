@@ -186,7 +186,7 @@ VkRenderPassBeginInfo vkinit::renderpass_begin_info(VkRenderPass renderPass, VkE
 	return info;
 }
 
-VkFenceCreateInfo vkinit::fence_create_info(VkFenceCreateFlags flags) {
+VkFenceCreateInfo vkinit::fence_create_info(VkFenceCreateFlags flags /*= 0 */) {
 	VkFenceCreateInfo fenceCreateInfo = {};
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceCreateInfo.pNext = nullptr;
@@ -228,6 +228,62 @@ VkWriteDescriptorSet vkinit::write_descriptor_buffer(VkDescriptorType type, VkDe
     write.descriptorCount = 1;
     write.descriptorType = type;
     write.pBufferInfo = bufferInfo;
+
+    return write;
+}
+
+VkCommandBufferBeginInfo vkinit::command_buffer_begin_info(VkBufferCreateFlags flags) {
+	VkCommandBufferBeginInfo cmdBeginInfo = {};
+	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cmdBeginInfo.pNext = nullptr;
+	cmdBeginInfo.pInheritanceInfo = nullptr;
+	cmdBeginInfo.flags = flags;
+
+	return cmdBeginInfo;
+}
+
+VkSubmitInfo vkinit::submit_info(VkCommandBuffer* cmd) {
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pNext = nullptr;
+
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = nullptr;
+	submitInfo.pWaitDstStageMask = nullptr;
+
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = cmd;
+
+	submitInfo.signalSemaphoreCount = 0;
+	submitInfo.pSignalSemaphores = nullptr;
+
+	return submitInfo;
+}
+
+VkSamplerCreateInfo vkinit::sampler_create_info(VkFilter filters, VkSamplerAddressMode samplerAddressMode /*= VK_SAMPLER_ADDRESS_MODE_REPEAT */) {
+    VkSamplerCreateInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    info.pNext = nullptr;
+
+    info.magFilter = filters;
+    info.minFilter = filters;
+    info.addressModeU = samplerAddressMode;
+    info.addressModeV = samplerAddressMode;
+    info.addressModeW = samplerAddressMode;
+
+    return info;
+}
+
+VkWriteDescriptorSet vkinit::write_descriptor_image(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorImageInfo* imageInfo, uint32_t binding) {
+    VkWriteDescriptorSet write = {};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.pNext = nullptr;
+
+    write.dstSet = dstSet;
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.descriptorType = type;
+    write.pImageInfo = imageInfo;
 
     return write;
 }
